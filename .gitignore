@@ -24,3 +24,6 @@ msiysp-*.tar
 
 # macOS stuff
 .DS_Store
+
+# Local databases
+msiysp_dev.db

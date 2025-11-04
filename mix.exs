@@ -22,7 +22,8 @@ defmodule Msiysp.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ecto_sqlite3, "~> 0.17"}
+      {:ecto_sqlite3, "~> 0.17"},
+      {:httpoison, "~> 2.0"}
     ]
   end
 end
