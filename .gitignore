@@ -27,3 +27,7 @@ msiysp-*.tar
 
 # Local databases
 msiysp_dev.db
+
+# Environment variables
+.env
+

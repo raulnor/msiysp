@@ -23,6 +23,7 @@ defmodule Msiysp.MixProject do
   defp deps do
     [
       {:ecto_sqlite3, "~> 0.17"},
+      {:jason, "~> 1.4"},
       {:httpoison, "~> 2.0"}
     ]
   end
