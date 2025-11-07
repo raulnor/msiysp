@@ -1,4 +1,6 @@
 defmodule Msiysp.StravaAuth do
+  alias Msiysp.{Activity,Repo}
+
   def client_id, do: System.fetch_env!("STRAVA_CLIENT_ID")
   def client_secret, do: System.fetch_env!("STRAVA_CLIENT_SECRET")
 
@@ -89,7 +91,7 @@ defmodule Msiysp.StravaAuth do
     case load_tokens() do
       {:ok, tokens} ->
         if expired?(tokens) do
-          refresh_access_token(tokens["refresh_token"])
+          refresh_access_token(tokens["refresh_token"])["access_token"]
         else
           tokens["access_token"]
         end
@@ -103,7 +105,8 @@ defmodule Msiysp.StravaAuth do
     token = get_valid_token()
     
     params = if after_date do
-      %{after: after_date}
+      {:ok, ex_date, 0} = DateTime.from_iso8601(after_date)
+      %{after: DateTime.to_unix(ex_date)}
     else
       %{per_page: 100}
     end
@@ -115,5 +118,24 @@ defmodule Msiysp.StravaAuth do
     )
     |> Map.get(:body)
     |> Jason.decode!()
+  end
+
+  def sync_activities(after_date \\ nil) do
+    activities = fetch_activities(after_date)
+
+    Enum.each(activities, fn activity ->
+      result = 
+        Activity.changeset_from_strava(activity)
+        |> Repo.insert(
+          on_conflict: :replace_all,
+          conflict_target: :strava_activity_id
+        )
+      case result do
+      {:ok, inserted} -> 
+        IO.puts("  ✓ Saved with id #{inserted.id}")
+      {:error, changeset} -> 
+        IO.puts("  ✗ Failed: #{inspect(changeset.errors)}")
+    end
+    end)
   end
 end
