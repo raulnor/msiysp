@@ -19,7 +19,7 @@ print(activities['type'].value_counts())
 print()
 
 # Distance and duration stats
-print(f"Total distance: {activities['distance_meters'].sum() / 1600:.1f} mi")
+print(f"Total distance: {activities['distance_meters'].sum() / 1609.344:.1f} mi")
 print(f"Total duration: {activities['duration_seconds'].sum() / 3600:.1f} hours")
 print()
 

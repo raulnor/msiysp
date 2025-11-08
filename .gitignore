@@ -33,3 +33,5 @@ msiysp_dev.db-wal
 # Environment variables
 .env
 
+# Python
+.ipynb_checkpoints/
