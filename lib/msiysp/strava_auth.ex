@@ -101,16 +101,14 @@ defmodule Msiysp.StravaAuth do
     end
   end
 
-  def fetch_activities(after_date \\ nil) do
+  def to_strava_date_param(iso8601string) do
+    {:ok, e_date, 0} = DateTime.from_iso8601(iso8601string)
+    DateTime.to_unix(e_date)
+  end
+
+  def fetch_activities(params \\ %{per_page: 100}) do
     token = get_valid_token()
     
-    params = if after_date do
-      {:ok, ex_date, 0} = DateTime.from_iso8601(after_date)
-      %{after: DateTime.to_unix(ex_date)}
-    else
-      %{per_page: 100}
-    end
-
     HTTPoison.get!(
       "https://www.strava.com/api/v3/athlete/activities",
       [{"Authorization", "Bearer #{token}"}],
@@ -120,8 +118,8 @@ defmodule Msiysp.StravaAuth do
     |> Jason.decode!()
   end
 
-  def sync_activities(after_date \\ nil) do
-    activities = fetch_activities(after_date)
+  def sync_activities(params \\ %{per_page: 100}) do
+    activities = fetch_activities(params)
 
     Enum.each(activities, fn activity ->
       result = 
@@ -132,10 +130,37 @@ defmodule Msiysp.StravaAuth do
         )
       case result do
       {:ok, inserted} -> 
-        IO.puts("  ✓ Saved with id #{inserted.id}")
+        IO.puts("  ✓ Saved with id #{inserted.id} - #{inserted.date}")
       {:error, changeset} -> 
         IO.puts("  ✗ Failed: #{inspect(changeset.errors)}")
     end
     end)
+  end
+
+  def sync_all_activities(date_ptr \\ nil) do
+    params = if date_ptr do
+      %{before: date_ptr |> to_strava_date_param}
+    else
+      %{per_page: 100}
+    end
+
+    activities = fetch_activities(params)
+    
+    Enum.each(activities, fn activity ->
+        Activity.changeset_from_strava(activity)
+        |> Repo.insert(
+          on_conflict: :replace_all,
+          conflict_target: :strava_activity_id
+        )
+    end)
+
+    case activities do
+      [] ->
+        IO.puts("✓ Sync complete! No more activities found.")
+      _ -> 
+        IO.puts("✓ Sync continuing after adding #{Enum.count(activities)} rows.")
+        earliest_activity = List.last(activities)
+        sync_all_activities(earliest_activity["start_date"])
+    end
   end
 end

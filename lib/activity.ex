@@ -3,7 +3,7 @@ defmodule Msiysp.Activity do
   import Ecto.Changeset
 
   schema "activities" do
-    field :date, :date
+    field :date, :utc_datetime
     field :type, :string
     field :distance_meters, :float
     field :duration_seconds, :float
