@@ -1,4 +1,4 @@
-defmodule Msiysp.StravaAuth do
+defmodule Msiysp.Strava do
   alias Msiysp.{Activity,Repo}
 
   def client_id, do: System.fetch_env!("STRAVA_CLIENT_ID")
