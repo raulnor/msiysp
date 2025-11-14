@@ -7,7 +7,8 @@ defmodule Msiysp.MixProject do
       version: "0.1.0",
       elixir: "~> 1.19",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      elixirc_options: [warnings_as_errors: false]
     ]
   end
 
@@ -24,7 +25,11 @@ defmodule Msiysp.MixProject do
     [
       {:ecto_sqlite3, "~> 0.17"},
       {:jason, "~> 1.4"},
-      {:httpoison, "~> 2.0"}
+      {:httpoison, "~> 2.0"},
+      {:phoenix, "~> 1.7.14"},
+      {:phoenix_live_view, "~> 1.0.0"},
+      {:phoenix_html, "~> 4.1"},
+      {:plug_cowboy, "~> 2.7"}
     ]
   end
 end
