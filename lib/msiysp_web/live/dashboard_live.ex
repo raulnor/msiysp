@@ -80,6 +80,9 @@ defmodule MsiyspWeb.DashboardLive do
         <:col :let={activity} label="Pace">
           <%= Format.time(activity.duration_seconds / (activity.distance_meters / 1609.34)) %>
         </:col>
+        <:col :let={activity}>
+          <a href={"https://www.strava.com/activities/#{activity.strava_activity_id}/edit"}>Edit</a>
+        </:col>
       </.table>
     </div>
     """
