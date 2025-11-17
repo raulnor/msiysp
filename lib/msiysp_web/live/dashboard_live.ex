@@ -69,7 +69,7 @@ defmodule MsiyspWeb.DashboardLive do
           <%= activity.name %>
         </:col>
         <:col :let={activity} label="Type">
-          <%= activity.type %>
+          <%= activity.type %><%= if activity.strava_workout_type == 1, do: " (Race)", else: "" %>
         </:col>
         <:col :let={activity} label="Distance">
           <%= Float.round(activity.distance_meters / 1609.34, 2) %> mi

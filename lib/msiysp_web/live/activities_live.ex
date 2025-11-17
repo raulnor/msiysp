@@ -25,7 +25,7 @@ defmodule MsiyspWeb.ActivitiesLive do
           <%= activity.name %>
         </:col>
         <:col :let={activity} label="Type">
-          <%= activity.type %>
+          <%= activity.type %><%= if activity.strava_workout_type == 1, do: " (Race)", else: "" %>
         </:col>
         <:col :let={activity} label="Distance">
           <%= if activity.distance_meters, do: "#{Float.round(activity.distance_meters / 1609.34, 2)} mi", else: "N/A" %>

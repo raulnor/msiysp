@@ -10,6 +10,7 @@ defmodule Msiysp.Activity do
     field(:name, :string)
     field(:strava_athlete_id, :integer)
     field(:strava_activity_id, :integer)
+    field(:strava_workout_type, :integer)
   end
 
   @doc false
@@ -22,7 +23,8 @@ defmodule Msiysp.Activity do
       :duration_seconds,
       :name,
       :strava_athlete_id,
-      :strava_activity_id
+      :strava_activity_id,
+      :strava_workout_type
     ])
     |> validate_required([:date, :type, :strava_activity_id])
     |> unique_constraint(:strava_activity_id)
@@ -41,7 +43,8 @@ defmodule Msiysp.Activity do
       duration_seconds: activity["elapsed_time"],
       name: activity["name"],
       strava_activity_id: activity["id"],
-      strava_athlete_id: activity["athlete"]["id"]
+      strava_athlete_id: activity["athlete"]["id"],
+      strava_workout_type: activity["workout_type"]
     })
   end
 end
