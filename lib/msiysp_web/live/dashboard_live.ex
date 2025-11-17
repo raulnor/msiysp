@@ -5,7 +5,7 @@ defmodule MsiyspWeb.DashboardLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    activities = Repo.all(from a in Activity, where: a.type == "Run", order_by: [desc: a.date])
+    activities = Repo.all(from(a in Activity, where: a.type == "Run", order_by: [desc: a.date]))
 
     total_runs = length(activities)
     total_distance = activities |> Enum.map(& &1.distance_meters) |> Enum.sum()
@@ -16,14 +16,15 @@ defmodule MsiyspWeb.DashboardLive do
 
     recent_activities = Enum.take(activities, 10)
 
-    {:ok, assign(socket,
-      total_runs: total_runs,
-      total_distance_miles: total_distance / 1609.34,
-      total_time_hours: total_time / 3600,
-      avg_distance_miles: avg_distance / 1609.34,
-      avg_pace: avg_pace,
-      recent_activities: recent_activities
-    )}
+    {:ok,
+     assign(socket,
+       total_runs: total_runs,
+       total_distance_miles: total_distance / 1609.34,
+       total_time_hours: total_time / 3600,
+       avg_distance_miles: avg_distance / 1609.34,
+       avg_pace: avg_pace,
+       recent_activities: recent_activities
+     )}
   end
 
   @impl true

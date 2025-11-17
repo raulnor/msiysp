@@ -1,5 +1,6 @@
 defmodule Msiysp.Format do
   def time(seconds) when is_nil(seconds), do: "N/A"
+
   def time(seconds) do
     hours = trunc(seconds / 3600)
     minutes = trunc(rem(trunc(seconds), 3600) / 60)

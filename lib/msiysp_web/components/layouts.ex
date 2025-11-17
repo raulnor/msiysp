@@ -5,5 +5,5 @@ defmodule MsiyspWeb.Layouts do
 
   use MsiyspWeb, :html
 
-  embed_templates "layouts/*"
+  embed_templates("layouts/*")
 end

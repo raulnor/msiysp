@@ -7,12 +7,12 @@ defmodule MsiyspWeb.CoreComponents do
   @doc """
   Renders a simple table for activities.
   """
-  attr :id, :string, required: true
-  attr :rows, :list, required: true
-  attr :row_click, :any, default: nil
+  attr(:id, :string, required: true)
+  attr(:rows, :list, required: true)
+  attr(:row_click, :any, default: nil)
 
   slot :col, required: true do
-    attr :label, :string
+    attr(:label, :string)
   end
 
   def table(assigns) do
@@ -39,8 +39,8 @@ defmodule MsiyspWeb.CoreComponents do
   @doc """
   Renders flash notices.
   """
-  attr :flash, :map, default: %{}, doc: "the map of flash messages"
-  attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
+  attr(:flash, :map, default: %{}, doc: "the map of flash messages")
+  attr(:id, :string, default: "flash-group", doc: "the optional id of flash container")
 
   def flash_group(assigns) do
     ~H"""

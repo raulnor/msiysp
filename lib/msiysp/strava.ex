@@ -1,5 +1,5 @@
 defmodule Msiysp.Strava do
-  alias Msiysp.{Activity,Repo}
+  alias Msiysp.{Activity, Repo}
 
   def client_id, do: System.fetch_env!("STRAVA_CLIENT_ID")
   def client_secret, do: System.fetch_env!("STRAVA_CLIENT_SECRET")
@@ -108,7 +108,7 @@ defmodule Msiysp.Strava do
 
   def fetch_activities(params \\ %{per_page: 100}) do
     token = get_valid_token()
-    
+
     HTTPoison.get!(
       "https://www.strava.com/api/v3/athlete/activities",
       [{"Authorization", "Bearer #{token}"}],
@@ -122,42 +122,46 @@ defmodule Msiysp.Strava do
     activities = fetch_activities(params)
 
     Enum.each(activities, fn activity ->
-      result = 
+      result =
         Activity.changeset_from_strava(activity)
         |> Repo.insert(
           on_conflict: :replace_all,
           conflict_target: :strava_activity_id
         )
+
       case result do
-      {:ok, inserted} -> 
-        IO.puts("  ✓ Saved with id #{inserted.id} - #{inserted.date}")
-      {:error, changeset} -> 
-        IO.puts("  ✗ Failed: #{inspect(changeset.errors)}")
-    end
+        {:ok, inserted} ->
+          IO.puts("  ✓ Saved with id #{inserted.id} - #{inserted.date}")
+
+        {:error, changeset} ->
+          IO.puts("  ✗ Failed: #{inspect(changeset.errors)}")
+      end
     end)
   end
 
   def sync_all_activities(date_ptr \\ nil) do
-    params = if date_ptr do
-      %{before: date_ptr |> to_strava_date_param}
-    else
-      %{per_page: 100}
-    end
+    params =
+      if date_ptr do
+        %{before: date_ptr |> to_strava_date_param}
+      else
+        %{per_page: 100}
+      end
 
     activities = fetch_activities(params)
-    
+
     Enum.each(activities, fn activity ->
-        Activity.changeset_from_strava(activity)
-        |> Repo.insert(
-          on_conflict: :replace_all,
-          conflict_target: :strava_activity_id
-        )
+      Activity.changeset_from_strava(activity)
+      |> Repo.insert(
+        on_conflict: :replace_all,
+        conflict_target: :strava_activity_id
+      )
     end)
 
     case activities do
       [] ->
         IO.puts("✓ Sync complete! No more activities found.")
-      _ -> 
+
+      _ ->
         IO.puts("✓ Sync continuing after adding #{Enum.count(activities)} rows.")
         earliest_activity = List.last(activities)
         sync_all_activities(earliest_activity["start_date"])

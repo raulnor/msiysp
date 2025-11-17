@@ -3,18 +3,18 @@ defmodule MsiyspWeb.Router do
   import Phoenix.LiveView.Router
 
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {MsiyspWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, html: {MsiyspWeb.Layouts, :root})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   scope "/", MsiyspWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
-    live "/", DashboardLive
-    live "/activities", ActivitiesLive
+    live("/", DashboardLive)
+    live("/activities", ActivitiesLive)
   end
 end

@@ -5,7 +5,7 @@ defmodule MsiyspWeb.ActivitiesLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    activities = Repo.all(from a in Activity, where: a.type == "Run", order_by: [desc: a.date])
+    activities = Repo.all(from(a in Activity, where: a.type == "Run", order_by: [desc: a.date]))
 
     {:ok, assign(socket, activities: activities, filter_type: "Run")}
   end
