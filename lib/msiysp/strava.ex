@@ -1,8 +1,40 @@
 defmodule Msiysp.Strava do
   alias Msiysp.{Activity, Repo}
 
-  def client_id, do: System.fetch_env!("STRAVA_CLIENT_ID")
-  def client_secret, do: System.fetch_env!("STRAVA_CLIENT_SECRET")
+  # Config file for IDs and tokens
+  @config_file Path.expand("~/.config/msiysp/strava_config.json")
+
+  def load_config do
+    case File.read(@config_file) do
+      {:ok, content} -> {:ok, Jason.decode!(content)}
+      error -> error
+    end
+  end
+
+  def save_config(partial_config) do
+    @config_file |> Path.dirname() |> File.mkdir_p!()
+
+    existing_config =
+      case File.read(@config_file) do
+        {:ok, content} -> Jason.decode!(content)
+        {:error, _} -> %{}
+      end
+
+    new_config = Map.merge(existing_config, partial_config)
+
+    File.write!(@config_file, Jason.encode!(new_config, pretty: true))
+    new_config
+  end
+
+  def client_id do
+    {:ok, config} = load_config()
+    config["client_id"] || raise "client_id not set in #{@config_file}"
+  end
+
+  def client_secret do
+    {:ok, config} = load_config()
+    config["client_secret"] || raise "client_secret not set in #{@config_file}"
+  end
 
   def get_auth_url do
     params =
@@ -31,35 +63,13 @@ defmodule Msiysp.Strava do
 
     case HTTPoison.post("https://www.strava.com/oauth/token", {:form, body}) do
       {:ok, %{status_code: 200, body: body}} ->
-        body |> Jason.decode!() |> save_tokens()
+        body |> Jason.decode!() |> save_config()
 
       {:ok, %{status_code: status_code, body: body}} ->
         raise "Strava API error: #{status_code} - #{body}"
 
       {:error, %HTTPoison.Error{reason: reason}} ->
         raise "HTTP request failed: #{reason}"
-    end
-  end
-
-  @token_file Path.expand("~/.config/msiysp/strava_tokens.json")
-
-  def save_tokens(token_response) do
-    @token_file |> Path.dirname() |> File.mkdir_p!()
-
-    tokens = %{
-      access_token: token_response["access_token"],
-      expires_at: token_response["expires_at"],
-      refresh_token: token_response["refresh_token"]
-    }
-
-    File.write!(@token_file, Jason.encode!(tokens, pretty: true))
-    tokens
-  end
-
-  def load_tokens do
-    case File.read(@token_file) do
-      {:ok, content} -> {:ok, Jason.decode!(content)}
-      error -> error
     end
   end
 
@@ -84,11 +94,11 @@ defmodule Msiysp.Strava do
       |> Map.get(:body)
       |> Jason.decode!()
 
-    save_tokens(response)
+    save_config(response)
   end
 
   def get_valid_token do
-    case load_tokens() do
+    case load_config() do
       {:ok, tokens} ->
         if expired?(tokens) do
           refresh_access_token(tokens["refresh_token"])["access_token"]
