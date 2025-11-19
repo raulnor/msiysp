@@ -35,3 +35,7 @@ msiysp_dev.db-wal
 
 # Python
 .ipynb_checkpoints/
+
+# Logs
+app.log
+app-error.log
