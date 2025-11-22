@@ -4,8 +4,24 @@ defmodule MsiyspWeb.DashboardLive do
   import Ecto.Query
 
   @impl true
-  def mount(_params, _session, socket) do
-    activities = Repo.all(from(a in Activity, where: a.type == "Run", order_by: [desc: a.date]))
+  def mount(params, _session, socket) do
+    {selected_year, activities} =
+      case params do
+        %{"year" => year} when is_binary(year) ->
+          {year, year |> String.to_integer |> get_activities_by_year}
+        _ ->
+          {nil, get_activities()}
+      end
+            
+    # Get all unique years from activities
+    years =
+      Repo.all(
+        from a in Activity,
+          where: a.type == "Run",
+          select: fragment("strftime('%Y', ?)", a.date),
+          distinct: true,
+          order_by: [desc: fragment("strftime('%Y', ?)", a.date)]
+      )
 
     total_runs = length(activities)
     total_distance = activities |> Enum.map(& &1.distance_meters) |> Enum.sum()
@@ -18,6 +34,8 @@ defmodule MsiyspWeb.DashboardLive do
 
     {:ok,
      assign(socket,
+       selected_year: selected_year,
+       available_years: years,
        total_runs: total_runs,
        total_distance_miles: total_distance / 1609.34,
        total_time_hours: total_time / 3600,
@@ -26,12 +44,44 @@ defmodule MsiyspWeb.DashboardLive do
        recent_activities: recent_activities
      )}
   end
+  
+  defp get_activities do
+    Repo.all(from(a in Activity, where: a.type == "Run", order_by: [desc: a.date]))
+  end
 
+  defp get_activities_by_year(year) do
+    start_date = DateTime.new!(Date.new!(year, 1, 1), ~T[00:00:00], "Etc/UTC")
+    end_date = DateTime.new!(Date.new!(year, 12, 31), ~T[23:59:59], "Etc/UTC")
+
+    Repo.all(
+      from(a in Activity,
+        where: a.type == "Run" and a.date >= ^start_date and a.date <= ^end_date,
+        order_by: [desc: a.date]
+      )
+    )
+  end
+  
   @impl true
   def render(assigns) do
     ~H"""
     <div>
       <h1>Running Dashboard</h1>
+
+      <div class="year-filter">
+        <%= if @selected_year == nil do %>
+          <b>All</b>
+        <% else %>
+          <a href="/">All</a>
+        <% end %>
+        <%= for year <- @available_years do %>
+          |
+          <%= if @selected_year == year do %>
+            <b><%= year %></b>
+          <% else %>
+            <a href={"/?year=#{year}"}><%= year %></a>
+          <% end %>
+        <% end %>
+      </div>
 
       <div class="stats">
         <div class="stat-card">
