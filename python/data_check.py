@@ -2,24 +2,20 @@ import sqlite3
 import pandas as pd
 from pathlib import Path
 
-db_path = Path(__file__).parent.parent / "msiysp_dev.db"
+db_path = Path(__file__).parent.parent / "tempo_dev.db"
 conn = sqlite3.connect(db_path)
 
-activities = pd.read_sql("SELECT * FROM activities", conn)
+samples = pd.read_sql("SELECT * FROM health_samples", conn)
 
-print(f"Activities: {len(activities)}")
+print(f"Samples: {len(samples)}")
 
 # Date range
-print(f"Date range: {activities['date'].min()} to {activities['date'].max()}")
-print(f"Days covered: {(pd.to_datetime(activities['date']).max() - pd.to_datetime(activities['date']).min()).days}\n")
+print(f"Date range: {samples['date'].min()} to {samples['date'].max()}")
+print(f"Days covered: {(pd.to_datetime(samples['date']).max() - pd.to_datetime(samples['date']).min()).days}\n")
 
-# Activity types breakdown
-print("Activity types:")
-print(activities['type'].value_counts())
+# Type breakdown
+print("Sample types:")
+print(samples['type'].value_counts())
 print()
 
-# Distance and duration stats
-print(f"Total distance: {activities['distance_meters'].sum() / 1609.344:.1f} mi")
-print(f"Total duration: {activities['duration_seconds'].sum() / 3600:.1f} hours")
-print()
 
