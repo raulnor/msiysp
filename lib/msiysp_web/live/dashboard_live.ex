@@ -62,25 +62,39 @@ defmodule MsiyspWeb.DashboardLive do
   end
   
   @impl true
+  def handle_event("sync_strava", _params, socket) do
+    # Sync latest activities from Strava
+    Task.start(fn ->
+      Msiysp.Strava.sync_activities()
+    end)
+
+    {:noreply, put_flash(socket, :info, "Syncing latest activities from Strava...")}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div>
-      <h1>Running Dashboard</h1>
-
-      <div class="year-filter">
-        <%= if @selected_year == nil do %>
-          <b>All</b>
-        <% else %>
-          <a href="/">All</a>
-        <% end %>
-        <%= for year <- @available_years do %>
-          |
-          <%= if @selected_year == year do %>
-            <b><%= year %></b>
-          <% else %>
-            <a href={"/?year=#{year}"}><%= year %></a>
-          <% end %>
-        <% end %>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+          <h1 style="margin: 0 0 10px 0;">Running Dashboard</h1>
+          <div class="year-filter">
+            <%= if @selected_year == nil do %>
+              <b>All</b>
+            <% else %>
+              <a href="/">All</a>
+            <% end %>
+            <%= for year <- @available_years do %>
+              |
+              <%= if @selected_year == year do %>
+                <b><%= year %></b>
+              <% else %>
+                <a href={"/?year=#{year}"}><%= year %></a>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+        <button phx-click="sync_strava" class="sync-button">Sync from Strava</button>
       </div>
 
       <div class="stats">

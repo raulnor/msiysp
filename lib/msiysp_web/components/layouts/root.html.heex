@@ -19,8 +19,18 @@
       .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
       .stat-value { font-size: 2em; font-weight: bold; color: #007bff; }
       .stat-label { color: #666; margin-top: 5px; }
+      .sync-button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+      .sync-button:hover { background: #0056b3; }
+      .sync-button:active { background: #004494; }
     </style>
-    <script defer phx-track-static type="text/javascript" src={~p"/js/phoenix.js"}></script>
+    <script src="https://cdn.jsdelivr.net/npm/phoenix@1.7.14/priv/static/phoenix.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phoenix_live_view@0.20.17/priv/static/phoenix_live_view.min.js"></script>
+    <script>
+      let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+      let liveSocket = new window.LiveView.LiveSocket("/live", window.Phoenix.Socket, {params: {_csrf_token: csrfToken}})
+      liveSocket.connect()
+      window.liveSocket = liveSocket
+    </script>
   </head>
   <body>
     <nav>
