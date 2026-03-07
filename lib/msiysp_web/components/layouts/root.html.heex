@@ -22,9 +22,12 @@
       .sync-button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
       .sync-button:hover { background: #0056b3; }
       .sync-button:active { background: #004494; }
+      .flash { padding: 12px; margin-bottom: 12px; border-radius: 8px; }
+      .flash.info { background: #e3f2fd; color: #092949; border-left: 4px solid #092949; }
+      .flash.error { background: #ffebee; color: #4a0f0f; border-left: 4px solid #4a0f0f; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phoenix@1.7.14/priv/static/phoenix.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/phoenix_live_view@0.20.17/priv/static/phoenix_live_view.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phoenix_live_view@1.0.18/priv/static/phoenix_live_view.min.js"></script>
     <script>
       let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
       let liveSocket = new window.LiveView.LiveSocket("/live", window.Phoenix.Socket, {params: {_csrf_token: csrfToken}})
