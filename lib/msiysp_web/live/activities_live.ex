@@ -1,13 +1,30 @@
 defmodule MsiyspWeb.ActivitiesLive do
   use MsiyspWeb, :live_view
-  alias Msiysp.{Repo, Activity, Format}
-  import Ecto.Query
+  alias Msiysp.Format
 
   @impl true
-  def mount(_params, _session, socket) do
-    activities = Repo.all(from(a in Activity, where: a.type == "Run", order_by: [desc: a.date]))
+  def mount(%{"year" => year}, _session, socket) when is_binary(year) do
+    {:ok, fetch_data_for_socket(socket, year)}
+  end
 
-    {:ok, assign(socket, activities: activities, filter_type: "Run")}
+  def mount(_params, _session, socket) do
+    {:ok, fetch_data_for_socket(socket, nil)}
+  end
+
+  def fetch_data_for_socket(socket, selected_year) do
+    activities =
+      case selected_year do
+        nil -> Msiysp.ActivityTable.get_activities()
+        year -> Msiysp.ActivityTable.get_activities_by_year(year)
+      end
+
+    years = Msiysp.ActivityTable.get_activity_years()
+
+    assign(socket,
+      activities: activities,
+      selected_year: selected_year,
+      available_years: years
+    )
   end
 
   @impl true
@@ -15,6 +32,21 @@ defmodule MsiyspWeb.ActivitiesLive do
     ~H"""
     <div>
       <h1>All Activities</h1>
+      <div>
+        <%= if @selected_year == nil do %>
+          <b>All</b>
+        <% else %>
+          <a href="/activities">All</a>
+        <% end %>
+        <%= for year <- @available_years do %>
+          |
+          <%= if @selected_year == year do %>
+            <b><%= year %></b>
+          <% else %>
+            <a href={"/activities/?year=#{year}"}><%= year %></a>
+          <% end %>
+        <% end %>
+      </div>
       <p>Showing <%= length(@activities) %> runs</p>
 
       <.table id="all-activities" rows={@activities}>

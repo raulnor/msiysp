@@ -1,7 +1,6 @@
 defmodule MsiyspWeb.DashboardLive do
   use MsiyspWeb, :live_view
-  alias Msiysp.{Repo, Activity, Format}
-  import Ecto.Query
+  alias Msiysp.Format
 
   @impl true
   def mount(%{"year" => year}, _session, socket) when is_binary(year) do
@@ -126,42 +125,14 @@ defmodule MsiyspWeb.DashboardLive do
     """
   end
 
-  defp get_activities do
-    Repo.all(from(a in Activity, where: a.type == "Run", order_by: [desc: a.date]))
-  end
-
-  defp get_activities_by_year(year) when is_binary(year) do
-    get_activities_by_year(String.to_integer(year))
-  end
-
-  defp get_activities_by_year(year) do
-    start_date = DateTime.new!(Date.new!(year, 1, 1), ~T[00:00:00], "Etc/UTC")
-    end_date = DateTime.new!(Date.new!(year, 12, 31), ~T[23:59:59], "Etc/UTC")
-
-    Repo.all(
-      from(a in Activity,
-        where: a.type == "Run" and a.date >= ^start_date and a.date <= ^end_date,
-        order_by: [desc: a.date]
-      )
-    )
-  end
-
   defp fetch_data_for_socket(socket, selected_year) do
     activities =
       case selected_year do
-        nil -> get_activities()
-        year -> get_activities_by_year(year)
+        nil -> Msiysp.ActivityTable.get_activities()
+        year -> Msiysp.ActivityTable.get_activities_by_year(year)
       end
 
-    years =
-      Repo.all(
-        from(a in Activity,
-          where: a.type == "Run",
-          select: fragment("strftime('%Y', ?)", a.date),
-          distinct: true,
-          order_by: [desc: fragment("strftime('%Y', ?)", a.date)]
-        )
-      )
+    years = Msiysp.ActivityTable.get_activity_years()
 
     total_runs = length(activities)
     total_distance = activities |> Enum.map(& &1.distance_meters) |> Enum.sum()
