@@ -5,7 +5,7 @@ defmodule MsiyspWeb.DashboardLive do
 
   @impl true
   def mount(%{"year" => year}, _session, socket) when is_binary(year) do
-    {:ok, fetch_data_for_socket(socket, String.to_integer(year))}
+    {:ok, fetch_data_for_socket(socket, year)}
   end
 
   def mount(_params, _session, socket) do
@@ -124,6 +124,10 @@ defmodule MsiyspWeb.DashboardLive do
 
   defp get_activities do
     Repo.all(from(a in Activity, where: a.type == "Run", order_by: [desc: a.date]))
+  end
+
+  defp get_activities_by_year(year) when is_binary(year) do
+    get_activities_by_year(String.to_integer(year))
   end
 
   defp get_activities_by_year(year) do
