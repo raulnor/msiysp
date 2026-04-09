@@ -27,12 +27,16 @@ defmodule MsiyspWeb.DashboardLive do
     {:noreply, put_flash(socket, :info, "Load complete! Refresh to view.")}
   end
 
-    @impl true
+  @impl true
   def handle_info(:reload_data, socket) do
-    params = if socket.assigns.selected_year, do: %{"year" => socket.assigns.selected_year}, else: %{}
-    socket = socket
-    |> clear_flash(:info)
-    |> fetch_data_for_socket(params)
+    params =
+      if socket.assigns.selected_year, do: %{"year" => socket.assigns.selected_year}, else: %{}
+
+    socket =
+      socket
+      |> clear_flash(:info)
+      |> fetch_data_for_socket(params)
+
     {:noreply, socket}
   end
 
@@ -48,7 +52,7 @@ defmodule MsiyspWeb.DashboardLive do
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div>
           <h1 style="margin: 0 0 10px 0;">Running Dashboard</h1>
-          <div class="year-filter">
+          <div>
             <%= if @selected_year == nil do %>
               <b>All</b>
             <% else %>
@@ -151,11 +155,12 @@ defmodule MsiyspWeb.DashboardLive do
 
     years =
       Repo.all(
-        from a in Activity,
+        from(a in Activity,
           where: a.type == "Run",
           select: fragment("strftime('%Y', ?)", a.date),
           distinct: true,
           order_by: [desc: fragment("strftime('%Y', ?)", a.date)]
+        )
       )
 
     total_runs = length(activities)
@@ -168,14 +173,14 @@ defmodule MsiyspWeb.DashboardLive do
     recent_activities = Enum.take(activities, 10)
 
     assign(socket,
-       selected_year: selected_year,
-       available_years: years,
-       total_runs: total_runs,
-       total_distance_miles: total_distance / 1609.34,
-       total_time_hours: total_time / 3600,
-       avg_distance_miles: avg_distance / 1609.34,
-       avg_pace: avg_pace,
-       recent_activities: recent_activities
-     )
+      selected_year: selected_year,
+      available_years: years,
+      total_runs: total_runs,
+      total_distance_miles: total_distance / 1609.34,
+      total_time_hours: total_time / 3600,
+      avg_distance_miles: avg_distance / 1609.34,
+      avg_pace: avg_pace,
+      recent_activities: recent_activities
+    )
   end
 end

@@ -41,7 +41,8 @@ defmodule MsiyspWeb.Endpoint do
     json_decoder: Phoenix.json_library()
   )
 
-  plug :add_cors_headers
+  plug(:add_cors_headers)
+
   defp add_cors_headers(conn, _opts) do
     put_resp_header(conn, "Access-Control-Allow-Origin", "*")
   end
