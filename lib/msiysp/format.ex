@@ -14,4 +14,17 @@ defmodule Msiysp.Format do
       "#{minutes}:#{pad2digit(secs)}"
     end
   end
+
+  def date_range(nil, _), do: ""
+  def date_range(start_iso, end_iso) do
+    parse = fn iso -> String.split(iso, "-") |> Enum.map(&String.to_integer/1) end
+    month = fn m -> ~w(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec) |> Enum.at(m - 1) end
+    [s_y, s_m, s_d] = parse.(start_iso)
+    [e_y, e_m, e_d] = parse.(end_iso)
+    if s_y == e_y do
+      "#{month.(s_m)} #{s_d} - #{month.(e_m)} #{e_d}, #{e_y}"
+    else
+      "#{month.(s_m)} #{s_d}, #{s_y} - #{month.(e_m)} #{e_d}, #{e_y}"
+    end
+  end
 end

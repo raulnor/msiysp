@@ -11,6 +11,7 @@ defmodule Msiysp.Activity do
     field(:strava_athlete_id, :integer)
     field(:strava_activity_id, :integer)
     field(:strava_workout_type, :integer)
+    field(:elevation_meters, :float)
   end
 
   @doc false
@@ -24,7 +25,8 @@ defmodule Msiysp.Activity do
       :name,
       :strava_athlete_id,
       :strava_activity_id,
-      :strava_workout_type
+      :strava_workout_type,
+      :elevation_meters
     ])
     |> validate_required([:date, :type, :strava_activity_id])
     |> unique_constraint(:strava_activity_id)
@@ -44,7 +46,8 @@ defmodule Msiysp.Activity do
       name: activity["name"],
       strava_activity_id: activity["id"],
       strava_athlete_id: activity["athlete"]["id"],
-      strava_workout_type: activity["workout_type"]
+      strava_workout_type: activity["workout_type"],
+      elevation_meters: activity["total_elevation_gain"]
     })
   end
 end
