@@ -81,8 +81,6 @@
             shapes: []
           }
 
-          Plotly.react(el, [mainTrace, hoverTrace], layout, { responsive: true, displayModeBar: false })
-
           const weekLabel = document.getElementById("progress-week-label")
           const distLabel = document.getElementById("progress-distance")
           const timeLabel = document.getElementById("progress-time")
@@ -119,11 +117,32 @@
             }
           }
 
-          const defaultWeekLabel = weekLabel.textContent.trim()
-          const defaultDist = distLabel.textContent.trim()
-          const defaultTime = timeLabel.textContent.trim()
-          const defaultElev = elevLabel ? elevLabel.textContent.trim() : ""
-          const defaultPace = paceLabel ? paceLabel.textContent.trim() : ""
+          const totalMiles = weeks.reduce((s, w) => s + w.miles, 0)
+          const totalSecs = weeks.reduce((s, w) => s + w.seconds, 0)
+          const totalElevMeters = weeks.reduce((s, w) => s + w.elev_meters, 0)
+          const firstWeek = weeks[0]
+          const lastWeek = weeks[weeks.length - 1]
+
+          const defaultWeekLabel = formatDateRange(firstWeek.week, lastWeek.week_end)
+          const defaultDist = totalMiles.toFixed(2) + " mi"
+          const defaultTime = formatDuration(totalSecs)
+          const defaultElev = formatElev(totalElevMeters)
+          const defaultPace = formatPace(totalMiles, totalSecs)
+
+          function showDefaults() {
+            if (weekLabel) weekLabel.textContent = defaultWeekLabel
+            if (distLabel) distLabel.textContent = defaultDist
+            if (timeLabel) timeLabel.textContent = defaultTime
+            if (elevLabel) elevLabel.textContent = defaultElev
+            if (paceLabel) paceLabel.textContent = defaultPace
+            const header = document.getElementById("progress-header")
+            if (header) header.style.visibility = "visible"
+          }
+
+          Plotly.react(el, [mainTrace, hoverTrace], layout, { responsive: true, displayModeBar: false })
+            .then(() => {
+              showDefaults()
+            })
 
           el.on("plotly_hover", function(data) {
             // data.points may include both traces; find the one with a valid pointIndex into weeks
@@ -156,11 +175,7 @@
           })
 
           el.on("plotly_unhover", function() {
-            weekLabel.textContent = defaultWeekLabel
-            distLabel.textContent = defaultDist
-            timeLabel.textContent = defaultTime
-            if (elevLabel) elevLabel.textContent = defaultElev
-            if (paceLabel) paceLabel.textContent = defaultPace
+            showDefaults()
             Plotly.relayout(el, { shapes: [] })
             Plotly.restyle(el, { "marker.color": [values.map(() => "white")], "marker.size": [values.map(() => 8)] }, [0])
           })
