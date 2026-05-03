@@ -12,6 +12,8 @@ defmodule MsiyspWeb.ProgressLive do
 
     total_seconds = Enum.reduce(weeks, 0, & &1.seconds + &2)
     total_elev_ft = Enum.reduce(weeks, 0.0, & &1.elev_meters + &2) * 3.28084
+    total_miles_sum = Enum.reduce(weeks, 0.0, & &1.miles + &2)
+    avg_pace = if total_miles_sum > 0, do: total_seconds / total_miles_sum, else: nil
 
     first_week = List.first(weeks)
     last_week = List.last(weeks)
@@ -23,6 +25,7 @@ defmodule MsiyspWeb.ProgressLive do
        prior_year_miles: prior_year_miles,
        total_seconds: total_seconds,
        total_elev_ft: total_elev_ft,
+       avg_pace: avg_pace,
        date_range_start: first_week && first_week.week,
        date_range_end: last_week && last_week.week_end
      )}
@@ -51,6 +54,10 @@ defmodule MsiyspWeb.ProgressLive do
             <div>
               <div style="font-size: 0.85em; color: #888;">Elev Gain</div>
               <div style="font-size: 1.6em; font-weight: 700;" id="progress-elev"><%= format_elev(@total_elev_ft) %></div>
+            </div>
+            <div>
+              <div style="font-size: 0.85em; color: #888;">Avg Pace</div>
+              <div style="font-size: 1.6em; font-weight: 700;" id="progress-pace"><%= if @avg_pace, do: "#{Msiysp.Format.time(@avg_pace)}/mi", else: "—" %></div>
             </div>
           </div>
         </div>

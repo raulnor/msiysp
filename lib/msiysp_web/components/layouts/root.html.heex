@@ -87,11 +87,20 @@
           const distLabel = document.getElementById("progress-distance")
           const timeLabel = document.getElementById("progress-time")
           const elevLabel = document.getElementById("progress-elev")
+          const paceLabel = document.getElementById("progress-pace")
 
           function formatDuration(secs) {
             const h = Math.floor(secs / 3600)
             const m = Math.floor((secs % 3600) / 60)
             return h > 0 ? `${h}h ${m}m` : `${m}m`
+          }
+
+          function formatPace(miles, secs) {
+            if (!miles || miles === 0) return "—"
+            const secsPerMile = secs / miles
+            const m = Math.floor(secsPerMile / 60)
+            const s = Math.round(secsPerMile % 60).toString().padStart(2, "0")
+            return `${m}:${s}/mi`
           }
 
           function formatElev(meters) {
@@ -114,6 +123,7 @@
           const defaultDist = distLabel.textContent.trim()
           const defaultTime = timeLabel.textContent.trim()
           const defaultElev = elevLabel ? elevLabel.textContent.trim() : ""
+          const defaultPace = paceLabel ? paceLabel.textContent.trim() : ""
 
           el.on("plotly_hover", function(data) {
             // data.points may include both traces; find the one with a valid pointIndex into weeks
@@ -127,6 +137,7 @@
             distLabel.textContent = w.miles.toFixed(2) + " mi"
             timeLabel.textContent = formatDuration(w.seconds)
             if (elevLabel) elevLabel.textContent = formatElev(w.elev_meters)
+            if (paceLabel) paceLabel.textContent = formatPace(w.miles, w.seconds)
 
             // Two-segment vertical bar: bottom segment from 0 to yVal, top from yVal to chart top
             Plotly.relayout(el, {
@@ -149,6 +160,7 @@
             distLabel.textContent = defaultDist
             timeLabel.textContent = defaultTime
             if (elevLabel) elevLabel.textContent = defaultElev
+            if (paceLabel) paceLabel.textContent = defaultPace
             Plotly.relayout(el, { shapes: [] })
             Plotly.restyle(el, { "marker.color": [values.map(() => "white")], "marker.size": [values.map(() => 8)] }, [0])
           })
