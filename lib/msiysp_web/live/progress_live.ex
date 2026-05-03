@@ -21,6 +21,138 @@ defmodule MsiyspWeb.ProgressLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <script>
+      window.renderProgressChart = function(el) {
+        const weeks = JSON.parse(el.dataset.weeks)
+        const labels = weeks.map(w => w.week)
+        const values = weeks.map(w => w.miles)
+        const orange = "#fc4c02"
+
+        const mainTrace = {
+          x: labels,
+          y: values,
+          type: "scatter",
+          mode: "lines+markers",
+          fill: "tozeroy",
+          line: { color: orange, width: 2 },
+          fillcolor: "rgba(252,76,2,0.18)",
+          marker: { color: "white", size: 8, line: { color: orange, width: 2 } },
+          hoverinfo: "none"
+        }
+
+        const hoverTrace = {
+          x: labels,
+          y: values.map(() => 1),
+          type: "bar",
+          yaxis: "y2",
+          marker: { color: "rgba(0,0,0,0)", line: { width: 0 } },
+          hoverinfo: "none",
+          showlegend: false
+        }
+
+        const layout = {
+          margin: { t: 10, r: 20, b: 40, l: 55 },
+          xaxis: { type: "date", tickformat: "%b", tickfont: { size: 11, color: "#666" }, showgrid: false, zeroline: false, showline: false },
+          yaxis: { showgrid: true, gridcolor: "#ebebeb", ticksuffix: " mi", tickfont: { size: 11, color: "#666" }, rangemode: "tozero", zeroline: false },
+          yaxis2: { overlaying: "y", range: [0, 1], showgrid: false, showticklabels: false, zeroline: false },
+          bargap: 0,
+          plot_bgcolor: "white",
+          paper_bgcolor: "white",
+          showlegend: false,
+          hovermode: "x",
+          shapes: []
+        }
+
+        const weekLabel = document.getElementById("progress-week-label")
+        const distLabel = document.getElementById("progress-distance")
+        const timeLabel = document.getElementById("progress-time")
+        const elevLabel = document.getElementById("progress-elev")
+        const paceLabel = document.getElementById("progress-pace")
+
+        function formatDuration(secs) {
+          const h = Math.floor(secs / 3600)
+          const m = Math.floor((secs % 3600) / 60)
+          return h > 0 ? `${h}h ${m}m` : `${m}m`
+        }
+
+        function formatPace(miles, secs) {
+          if (!miles || miles === 0) return "—"
+          const secsPerMile = secs / miles
+          const m = Math.floor(secsPerMile / 60)
+          const s = Math.round(secsPerMile % 60).toString().padStart(2, "0")
+          return `${m}:${s}/mi`
+        }
+
+        function formatElev(meters) {
+          const ft = Math.round(meters * 3.28084)
+          return ft.toLocaleString("en-US") + " ft"
+        }
+
+        function formatDateRange(start, end) {
+          const [s_y, s_m, s_d] = start.split("-").map(Number)
+          const [e_y, e_m, e_d] = end.split("-").map(Number)
+          const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+          if (s_y == e_y) {
+            return `${months[s_m-1]} ${s_d} - ${months[e_m-1]} ${e_d}, ${e_y}`
+          } else {
+            return `${months[s_m-1]} ${s_d}, ${s_y} - ${months[e_m-1]} ${e_d}, ${e_y}`
+          }
+        }
+
+        const totalMiles = weeks.reduce((s, w) => s + w.miles, 0)
+        const totalSecs = weeks.reduce((s, w) => s + w.seconds, 0)
+        const totalElevMeters = weeks.reduce((s, w) => s + w.elev_meters, 0)
+        const firstWeek = weeks[0]
+        const lastWeek = weeks[weeks.length - 1]
+
+        const defaultWeekLabel = formatDateRange(firstWeek.week, lastWeek.week_end)
+        const defaultDist = totalMiles.toFixed(2) + " mi"
+        const defaultTime = formatDuration(totalSecs)
+        const defaultElev = formatElev(totalElevMeters)
+        const defaultPace = formatPace(totalMiles, totalSecs)
+
+        function showDefaults() {
+          if (weekLabel) weekLabel.textContent = defaultWeekLabel
+          if (distLabel) distLabel.textContent = defaultDist
+          if (timeLabel) timeLabel.textContent = defaultTime
+          if (elevLabel) elevLabel.textContent = defaultElev
+          if (paceLabel) paceLabel.textContent = defaultPace
+          const header = document.getElementById("progress-header")
+          if (header) header.style.visibility = "visible"
+        }
+
+        Plotly.react(el, [mainTrace, hoverTrace], layout, { responsive: true, displayModeBar: false })
+          .then(() => showDefaults())
+
+        el.on("plotly_hover", function(data) {
+          const pt = data.points.find(p => p.pointIndex < weeks.length)
+          if (!pt) return
+          const idx = pt.pointIndex
+          const w = weeks[idx]
+
+          weekLabel.textContent = formatDateRange(w.week, w.week_end)
+          distLabel.textContent = w.miles.toFixed(2) + " mi"
+          timeLabel.textContent = formatDuration(w.seconds)
+          if (elevLabel) elevLabel.textContent = formatElev(w.elev_meters)
+          if (paceLabel) paceLabel.textContent = formatPace(w.miles, w.seconds)
+
+          Plotly.relayout(el, {
+            shapes: [{ type: "line", x0: w.week, x1: w.week, y0: 0, y1: w.miles, line: { color: "#333", width: 1.5 } }]
+          })
+
+          const markerColors = values.map((_, i) => i === idx ? orange : "white")
+          const markerSizes  = values.map((_, i) => i === idx ? 10 : 8)
+          Plotly.restyle(el, { "marker.color": [markerColors], "marker.size": [markerSizes] }, [0])
+        })
+
+        el.on("plotly_unhover", function() {
+          showDefaults()
+          Plotly.relayout(el, { shapes: [] })
+          Plotly.restyle(el, { "marker.color": [values.map(() => "white")], "marker.size": [values.map(() => 8)] }, [0])
+        })
+      }
+    </script>
     <div>
       <h1>Progress</h1>
 
