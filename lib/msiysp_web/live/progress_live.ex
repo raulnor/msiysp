@@ -38,7 +38,11 @@ defmodule MsiyspWeb.ProgressLive do
         const weeks = JSON.parse(el.dataset.weeks)
         const labels = weeks.map(w => w.week)
         const values = weeks.map(w => w.miles)
-        const orange = "#fc4c02"
+        const css = getComputedStyle(document.documentElement)
+        const accent = css.getPropertyValue("--color-accent").trim()
+        const surface = css.getPropertyValue("--color-surface").trim()
+        const secondary = css.getPropertyValue("--color-secondary").trim()
+        const border = css.getPropertyValue("--color-border").trim()
 
         const mainTrace = {
           x: labels,
@@ -46,9 +50,9 @@ defmodule MsiyspWeb.ProgressLive do
           type: "scatter",
           mode: "lines+markers",
           fill: "tozeroy",
-          line: { color: orange, width: 2 },
-          fillcolor: "rgba(252,76,2,0.18)",
-          marker: { color: "white", size: 8, line: { color: orange, width: 2 } },
+          line: { color: accent, width: 2 },
+          fillcolor: "rgba(246,187,85,0.15)",
+          marker: { color: surface, size: 8, line: { color: accent, width: 2 } },
           hoverinfo: "none"
         }
 
@@ -64,12 +68,12 @@ defmodule MsiyspWeb.ProgressLive do
 
         const layout = {
           margin: { t: 10, r: 20, b: 40, l: 55 },
-          xaxis: { type: "date", tickformat: "%b", tickfont: { size: 11, color: "#666" }, showgrid: false, zeroline: false, showline: false },
-          yaxis: { showgrid: true, gridcolor: "#ebebeb", ticksuffix: " mi", tickfont: { size: 11, color: "#666" }, rangemode: "tozero", zeroline: false },
+          xaxis: { type: "date", tickformat: "%b", tickfont: { size: 11, color: secondary }, showgrid: false, zeroline: false, showline: false },
+          yaxis: { showgrid: true, gridcolor: border, ticksuffix: " mi", tickfont: { size: 11, color: secondary }, rangemode: "tozero", zeroline: false },
           yaxis2: { overlaying: "y", range: [0, 1], showgrid: false, showticklabels: false, zeroline: false },
           bargap: 0,
-          plot_bgcolor: "white",
-          paper_bgcolor: "white",
+          plot_bgcolor: surface,
+          paper_bgcolor: surface,
           showlegend: false,
           hovermode: "x",
           shapes: []
@@ -149,18 +153,14 @@ defmodule MsiyspWeb.ProgressLive do
           if (paceLabel) paceLabel.textContent = formatPace(w.miles, w.seconds)
 
           Plotly.relayout(el, {
-            shapes: [{ type: "line", x0: w.week, x1: w.week, y0: 0, y1: w.miles, line: { color: "#333", width: 1.5 } }]
+            shapes: [{ type: "line", x0: w.week, x1: w.week, y0: 0, y1: w.miles, line: { color: secondary, width: 1.5 }, yanchor: "y", layer: "below" }]
           })
 
-          const markerColors = values.map((_, i) => i === idx ? orange : "white")
-          const markerSizes  = values.map((_, i) => i === idx ? 10 : 8)
-          Plotly.restyle(el, { "marker.color": [markerColors], "marker.size": [markerSizes] }, [0])
         })
 
         el.on("plotly_unhover", function() {
           showDefaults()
           Plotly.relayout(el, { shapes: [] })
-          Plotly.restyle(el, { "marker.color": [values.map(() => "white")], "marker.size": [values.map(() => 8)] }, [0])
         })
       }
     </script>
@@ -177,25 +177,25 @@ defmodule MsiyspWeb.ProgressLive do
         <% end %>
       </div>
 
-      <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      <div style="background: var(--color-surface); border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
         <div id="progress-header" style="visibility: hidden;">
-          <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 8px;" id="progress-week-label"></div>
+          <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 8px; color: var(--color-primary);" id="progress-week-label"></div>
           <div style="display: flex; gap: 40px; margin-bottom: 16px;">
             <div>
-              <div style="font-size: 0.85em; color: #888;">Distance</div>
-              <div style="font-size: 1.6em; font-weight: 700;" id="progress-distance"></div>
+              <div style="font-size: 0.85em; color: var(--color-secondary);">Distance</div>
+              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-primary);" id="progress-distance"></div>
             </div>
             <div>
-              <div style="font-size: 0.85em; color: #888;">Time</div>
-              <div style="font-size: 1.6em; font-weight: 700;" id="progress-time"></div>
+              <div style="font-size: 0.85em; color: var(--color-secondary);">Time</div>
+              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-primary);" id="progress-time"></div>
             </div>
             <div>
-              <div style="font-size: 0.85em; color: #888;">Elev Gain</div>
-              <div style="font-size: 1.6em; font-weight: 700;" id="progress-elev"></div>
+              <div style="font-size: 0.85em; color: var(--color-secondary);">Elev Gain</div>
+              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-primary);" id="progress-elev"></div>
             </div>
             <div>
-              <div style="font-size: 0.85em; color: #888;">Avg Pace</div>
-              <div style="font-size: 1.6em; font-weight: 700;" id="progress-pace"></div>
+              <div style="font-size: 0.85em; color: var(--color-secondary);">Avg Pace</div>
+              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-primary);" id="progress-pace"></div>
             </div>
           </div>
         </div>
