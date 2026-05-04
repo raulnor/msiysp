@@ -215,16 +215,19 @@ defmodule MsiyspWeb.ProgressLive do
     today = DateTime.to_date(now)
 
     range_starts = %{
-      "3m"  => DateTime.add(now, -91, :day),
+      "3m" => DateTime.add(now, -91, :day),
       "ytd" => DateTime.new!(Date.new!(today.year, 1, 1), ~T[00:00:00], "Etc/UTC"),
-      "1y"  => DateTime.add(now, -365, :day),
-      "2y"  => DateTime.add(now, -730, :day)
+      "1y" => DateTime.add(now, -365, :day),
+      "2y" => DateTime.add(now, -730, :day)
     }
 
     picker_ranges =
       Enum.map([{"3M", "3m"}, {"YTD", "ytd"}, {"1Y", "1y"}, {"2Y", "2y"}], fn {label, range} ->
         rs = range_starts[range]
-        url = "/progress?start=#{Date.to_iso8601(DateTime.to_date(rs))}&end=#{Date.to_iso8601(today)}"
+
+        url =
+          "/progress?start=#{Date.to_iso8601(DateTime.to_date(rs))}&end=#{Date.to_iso8601(today)}"
+
         {label, range, url}
       end) ++ [{"All", "all", "/progress?start=all"}]
 
@@ -236,9 +239,11 @@ defmodule MsiyspWeb.ProgressLive do
           {"all", acts, first}
 
         start_dt ->
-          range = Enum.find_value(range_starts, "custom", fn {r, rs} ->
-            if Date.compare(DateTime.to_date(rs), DateTime.to_date(start_dt)) == :eq, do: r
-          end)
+          range =
+            Enum.find_value(range_starts, "custom", fn {r, rs} ->
+              if Date.compare(DateTime.to_date(rs), DateTime.to_date(start_dt)) == :eq, do: r
+            end)
+
           {range, fetch_activities_between(start_dt, end_dt), start_dt}
       end
 
@@ -256,7 +261,12 @@ defmodule MsiyspWeb.ProgressLive do
       from(a in Activity,
         where: a.type == "Run",
         order_by: [asc: a.date],
-        select: %{date: a.date, distance_meters: a.distance_meters, duration_seconds: a.duration_seconds, elevation_meters: a.elevation_meters}
+        select: %{
+          date: a.date,
+          distance_meters: a.distance_meters,
+          duration_seconds: a.duration_seconds,
+          elevation_meters: a.elevation_meters
+        }
       )
     )
   end
@@ -266,11 +276,15 @@ defmodule MsiyspWeb.ProgressLive do
       from(a in Activity,
         where: a.type == "Run" and a.date >= ^start_dt and a.date <= ^end_dt,
         order_by: [asc: a.date],
-        select: %{date: a.date, distance_meters: a.distance_meters, duration_seconds: a.duration_seconds, elevation_meters: a.elevation_meters}
+        select: %{
+          date: a.date,
+          distance_meters: a.distance_meters,
+          duration_seconds: a.duration_seconds,
+          elevation_meters: a.elevation_meters
+        }
       )
     )
   end
-
 
   defp build_weekly_buckets(activities, start_dt, end_dt) do
     start_date = DateTime.to_date(start_dt)
@@ -284,13 +298,17 @@ defmodule MsiyspWeb.ProgressLive do
         miles = act.distance_meters / @meters_per_mile
         secs = act.duration_seconds || 0
         elev = act.elevation_meters || 0
-        Map.update(acc, wk, {miles, secs, elev}, fn {m, s, e} -> {m + miles, s + secs, e + elev} end)
+
+        Map.update(acc, wk, {miles, secs, elev}, fn {m, s, e} ->
+          {m + miles, s + secs, e + elev}
+        end)
       end)
 
     Stream.iterate(week_start, &Date.add(&1, 7))
     |> Stream.take_while(&(Date.compare(&1, end_date) != :gt))
     |> Enum.map(fn wk ->
       {miles, secs, elev} = Map.get(by_week, wk, {0.0, 0, 0})
+
       %{
         week: Date.to_string(wk),
         week_end: Date.to_string(Date.add(wk, 6)),
