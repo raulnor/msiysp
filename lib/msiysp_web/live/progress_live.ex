@@ -7,16 +7,27 @@ defmodule MsiyspWeb.ProgressLive do
   @meters_per_mile 1609.34
 
   @impl true
-  def mount(_params, _session, socket) do
-    {weeks, total_miles, prior_year_miles} = build_chart_data()
-
-    {:ok,
-     assign(socket,
-       weeks: weeks,
-       total_miles: total_miles,
-       prior_year_miles: prior_year_miles
-     )}
+  def mount(%{"start" => "all"}, _session, socket) do
+    now = DateTime.utc_now()
+    {:ok, fetch_data_for_socket(socket, :all, now)}
   end
+
+  def mount(%{"start" => start_str, "end" => end_str}, _session, socket) do
+    with {:ok, start_date} <- Date.from_iso8601(start_str),
+         {:ok, end_date} <- Date.from_iso8601(end_str) do
+      start_dt = DateTime.new!(start_date, ~T[00:00:00], "Etc/UTC")
+      end_dt = DateTime.new!(end_date, ~T[23:59:59], "Etc/UTC")
+      {:ok, fetch_data_for_socket(socket, start_dt, end_dt)}
+    else
+      _ -> {:ok, fetch_data_for_socket(socket, default_start(), DateTime.utc_now())}
+    end
+  end
+
+  def mount(_params, _session, socket) do
+    {:ok, fetch_data_for_socket(socket, default_start(), DateTime.utc_now())}
+  end
+
+  defp default_start, do: DateTime.add(DateTime.utc_now(), -365, :day)
 
   @impl true
   def render(assigns) do
@@ -154,7 +165,17 @@ defmodule MsiyspWeb.ProgressLive do
       }
     </script>
     <div>
-      <h1>Progress</h1>
+      <h1 style="margin-bottom: 8px;">Progress</h1>
+      <div style="margin-bottom: 20px;">
+        <%= for {label, range, url} <- @picker_ranges do %>
+          <%= if range != "3m" do %>|<% end %>
+          <%= if @selected_range == range do %>
+            <b><%= label %></b>
+          <% else %>
+            <a href={url}><%= label %></a>
+          <% end %>
+        <% end %>
+      </div>
 
       <div style="background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div id="progress-header" style="visibility: hidden;">
@@ -189,36 +210,67 @@ defmodule MsiyspWeb.ProgressLive do
     """
   end
 
-  defp build_chart_data do
+  defp fetch_data_for_socket(socket, start_dt_or_all, end_dt) do
     now = DateTime.utc_now()
-    one_year_ago = DateTime.add(now, -365, :day)
-    two_years_ago = DateTime.add(now, -730, :day)
+    today = DateTime.to_date(now)
 
-    # Fetch two years of runs to compute current + prior year totals
-    activities =
-      Repo.all(
-        from(a in Activity,
-          where: a.type == "Run" and a.date >= ^two_years_ago,
-          order_by: [asc: a.date],
-          select: %{date: a.date, distance_meters: a.distance_meters, duration_seconds: a.duration_seconds, elevation_meters: a.elevation_meters}
-        )
+    range_starts = %{
+      "3m"  => DateTime.add(now, -91, :day),
+      "ytd" => DateTime.new!(Date.new!(today.year, 1, 1), ~T[00:00:00], "Etc/UTC"),
+      "1y"  => DateTime.add(now, -365, :day),
+      "2y"  => DateTime.add(now, -730, :day)
+    }
+
+    picker_ranges =
+      Enum.map([{"3M", "3m"}, {"YTD", "ytd"}, {"1Y", "1y"}, {"2Y", "2y"}], fn {label, range} ->
+        rs = range_starts[range]
+        url = "/progress?start=#{Date.to_iso8601(DateTime.to_date(rs))}&end=#{Date.to_iso8601(today)}"
+        {label, range, url}
+      end) ++ [{"All", "all", "/progress?start=all"}]
+
+    {selected_range, activities, actual_start} =
+      case start_dt_or_all do
+        :all ->
+          acts = fetch_all_activities()
+          first = acts |> List.first() |> Map.get(:date, now)
+          {"all", acts, first}
+
+        start_dt ->
+          range = Enum.find_value(range_starts, "custom", fn {r, rs} ->
+            if Date.compare(DateTime.to_date(rs), DateTime.to_date(start_dt)) == :eq, do: r
+          end)
+          {range, fetch_activities_between(start_dt, end_dt), start_dt}
+      end
+
+    weeks = build_weekly_buckets(activities, actual_start, end_dt)
+
+    assign(socket,
+      weeks: weeks,
+      selected_range: selected_range,
+      picker_ranges: picker_ranges
+    )
+  end
+
+  defp fetch_all_activities do
+    Repo.all(
+      from(a in Activity,
+        where: a.type == "Run",
+        order_by: [asc: a.date],
+        select: %{date: a.date, distance_meters: a.distance_meters, duration_seconds: a.duration_seconds, elevation_meters: a.elevation_meters}
       )
-
-    current_year_acts = Enum.filter(activities, &(DateTime.compare(&1.date, one_year_ago) != :lt))
-    prior_year_acts = Enum.filter(activities, &(DateTime.compare(&1.date, one_year_ago) == :lt))
-
-    total_miles = sum_miles(current_year_acts)
-    prior_year_miles = sum_miles(prior_year_acts)
-
-    # Build weekly buckets for trailing 52 weeks
-    weeks = build_weekly_buckets(current_year_acts, one_year_ago, now)
-
-    {weeks, total_miles, prior_year_miles}
+    )
   end
 
-  defp sum_miles(acts) do
-    acts |> Enum.map(& &1.distance_meters) |> Enum.sum() |> Kernel./(@meters_per_mile)
+  defp fetch_activities_between(start_dt, end_dt) do
+    Repo.all(
+      from(a in Activity,
+        where: a.type == "Run" and a.date >= ^start_dt and a.date <= ^end_dt,
+        order_by: [asc: a.date],
+        select: %{date: a.date, distance_meters: a.distance_meters, duration_seconds: a.duration_seconds, elevation_meters: a.elevation_meters}
+      )
+    )
   end
+
 
   defp build_weekly_buckets(activities, start_dt, end_dt) do
     start_date = DateTime.to_date(start_dt)
