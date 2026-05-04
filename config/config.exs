@@ -14,6 +14,14 @@ config :msiysp, Msiysp.Repo,
 # Configure Phoenix endpoint
 config :msiysp, MsiyspWeb.Endpoint,
   url: [host: "localhost"],
+  code_reloader: true,
+  live_reload: [
+    patterns: [
+      ~r"lib/msiysp_web/(controllers|live|components)/.*(ex|heex)$",
+      ~r"lib/msiysp_web/.*\.(ex|heex)$",
+      ~r"priv/static/.*(js|css|png|jpeg|gif|svg)$"
+    ]
+  ],
   check_origin: ["//msiysp.melvis.site", "//localhost"],
   render_errors: [
     formats: [html: MsiyspWeb.ErrorHTML],

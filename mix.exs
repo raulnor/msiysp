@@ -29,7 +29,8 @@ defmodule Msiysp.MixProject do
       {:phoenix, "~> 1.7.14"},
       {:phoenix_live_view, "~> 1.0.0"},
       {:phoenix_html, "~> 4.1"},
-      {:plug_cowboy, "~> 2.7"}
+      {:plug_cowboy, "~> 2.7"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev}
     ]
   end
 end
