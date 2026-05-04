@@ -17,5 +17,6 @@ defmodule MsiyspWeb.Router do
     live("/", DashboardLive)
     live("/activities", ActivitiesLive)
     live("/progress", ProgressLive)
+    live("/races", RacesLive)
   end
 end
