@@ -14,6 +14,7 @@ config :msiysp, Msiysp.Repo,
 # Configure Phoenix endpoint
 config :msiysp, MsiyspWeb.Endpoint,
   url: [host: "localhost"],
+  check_origin: ["//msiysp.melvis.site", "//localhost"],
   render_errors: [
     formats: [html: MsiyspWeb.ErrorHTML],
     layout: false
