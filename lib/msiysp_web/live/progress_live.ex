@@ -39,8 +39,8 @@ defmodule MsiyspWeb.ProgressLive do
         const values = weeks.map(w => w.miles)
         const css = getComputedStyle(document.documentElement)
         const accent = css.getPropertyValue("--color-accent").trim()
-        const surface = css.getPropertyValue("--color-surface").trim()
-        const secondary = css.getPropertyValue("--color-secondary").trim()
+        const surface = css.getPropertyValue("--color-bg-secondary").trim()
+        const secondary = css.getPropertyValue("--color-fg-secondary").trim()
         const border = css.getPropertyValue("--color-border").trim()
 
         const mainTrace = {
@@ -176,25 +176,25 @@ defmodule MsiyspWeb.ProgressLive do
         <% end %>
       </div>
 
-      <div style="background: var(--color-surface); border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+      <div style="background: var(--color-bg-secondary); border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
         <div id="progress-header" style="visibility: hidden;">
-          <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 8px; color: var(--color-primary);" id="progress-week-label"></div>
+          <div style="font-size: 1.1em; font-weight: 700; margin-bottom: 8px; color: var(--color-fg-primary);" id="progress-week-label"></div>
           <div style="display: flex; gap: 40px; margin-bottom: 16px;">
             <div>
-              <div style="font-size: 0.85em; color: var(--color-secondary);">Distance</div>
-              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-primary);" id="progress-distance"></div>
+              <div style="font-size: 0.85em; color: var(--color-fg-secondary);">Distance</div>
+              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-fg-primary);" id="progress-distance"></div>
             </div>
             <div>
-              <div style="font-size: 0.85em; color: var(--color-secondary);">Time</div>
-              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-primary);" id="progress-time"></div>
+              <div style="font-size: 0.85em; color: var(--color-fg-secondary);">Time</div>
+              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-fg-primary);" id="progress-time"></div>
             </div>
             <div>
-              <div style="font-size: 0.85em; color: var(--color-secondary);">Elev Gain</div>
-              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-primary);" id="progress-elev"></div>
+              <div style="font-size: 0.85em; color: var(--color-fg-secondary);">Elev Gain</div>
+              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-fg-primary);" id="progress-elev"></div>
             </div>
             <div>
-              <div style="font-size: 0.85em; color: var(--color-secondary);">Avg Pace</div>
-              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-primary);" id="progress-pace"></div>
+              <div style="font-size: 0.85em; color: var(--color-fg-secondary);">Avg Pace</div>
+              <div style="font-size: 1.6em; font-weight: 700; color: var(--color-fg-primary);" id="progress-pace"></div>
             </div>
           </div>
         </div>
